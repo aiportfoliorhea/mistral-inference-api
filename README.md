@@ -1,4 +1,22 @@
 # mistral-inference-api
+
+## Model Quality Benchmarks (FinanceBench F1)
+
+Fine-tuned Mistral 7B on FinanceBench dataset using QLoRA (PEFT).
+Evaluated with F1 score against ground truth answers.
+
+| Metric | Base Mistral 7B | Fine-tuned INT4 | Fine-tuned INT8 |
+|---|---|---|---|
+| F1 (original prompt) | 14.5% | 12.3% | 12.7% |
+| F1 (explicit instruction prompt) | 4.2% | 9.0% | **16.9%** |
+
+**Key finding:** Explicit instruction prompt hurt the base model (14.5% → 4.2%) 
+but helped both fine-tuned models. The base model wasn't trained to follow terse 
+instructions — constraining it breaks its output format. Fine-tuned models learned 
+the short-answer format, so the explicit prompt reinforces it rather than fighting it.
+
+**Winner:** Fine-tuned INT8 + explicit instruction prompt at **16.9% F1**.
+
 ## Benchmark Results
 
 All benchmarks run on Lambda Labs A10 GPU unless noted.
