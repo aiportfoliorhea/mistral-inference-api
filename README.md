@@ -19,6 +19,7 @@ Dynamic batching variant collects requests for 50ms before firing inference.
 ## Kaggle Notebooks
 - [Fine-tuning + INT8 Quantization notebook](https://www.kaggle.com/code/aiportfoliorhea/int8-ft-final) - QLoRA on FinanceBench, bitsandbytes INT4/INT8
 - [Dynamic Batching notebook](https://www.kaggle.com/code/aiportfoliorhea/fast-async-batching) - Batching with FAST API Async
+- Serving benchmarks run manually on Lambda Labs A10 GPU using curl and Python timing scripts (not saved as notebook)
 
 ## Architecture
 Request → FastAPI endpoint → asyncio.Queue → Worker → llama_cpp / vLLM → Response
