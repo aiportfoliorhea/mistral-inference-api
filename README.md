@@ -1,5 +1,22 @@
 # mistral-inference-api
 
+# Mistral Inference API
+
+LLM inference optimizer built on fine-tuned Mistral 7B. Benchmarks three serving 
+frameworks (llama.cpp, FastAPI async, vLLM) on FinanceBench financial QA tasks.
+Implements QLoRA fine-tuning, INT4/INT8 quantization, async request queuing, 
+and dynamic batching.
+
+## Stack
+- **Model:** Mistral 7B Instruct v0.3, fine-tuned with QLoRA on FinanceBench
+- **Quantization:** bitsandbytes (INT4, INT8) + llama.cpp GGUF (Q8_0)
+- **Serving:** llama.cpp · FastAPI async · vLLM (PagedAttention)
+- **Training:** Kaggle T4 GPU · PEFT · FinanceBench instruction format
+- **Benchmarking:** Lambda Labs A10 GPU
+
+## Architecture
+Request → FastAPI endpoint → asyncio.Queue → Worker → llama_cpp / vLLM → Response
+
 ## Model Quality Benchmarks (FinanceBench F1)
 
 Fine-tuned Mistral 7B on FinanceBench dataset using QLoRA (PEFT).
