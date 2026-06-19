@@ -14,6 +14,12 @@ and dynamic batching.
 - **Training:** Kaggle T4 GPU · PEFT · FinanceBench instruction format
 - **Benchmarking:** Lambda Labs A10 GPU
 
+Dynamic batching variant collects requests for 50ms before firing inference.
+
+## Kaggle Notebooks
+- [Fine-tuning + INT8 Quantization](https://www.kaggle.com/code/aiportfoliorhea/int8-ft-final) — QLoRA on FinanceBench, bitsandbytes INT4/INT8
+- Dynamic batching notebook — https://www.kaggle.com/code/aiportfoliorhea/fast-async-batching
+
 ## Architecture
 Request → FastAPI endpoint → asyncio.Queue → Worker → llama_cpp / vLLM → Response
 
