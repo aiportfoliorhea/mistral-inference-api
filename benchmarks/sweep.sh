@@ -7,9 +7,12 @@ set -euo pipefail
 
 MODEL="mistralai/Mistral-7B-v0.3"
 OUTDIR="results/sweep"
+FLOOR=100
 mkdir -p "$OUTDIR"
 
 for C in 1 2 4 8 16 32 64 128; do
+  N=$(( C * 10 ))
+  (( N < FLOOR )) && N=FLOOR
   echo "=== concurrency=$C ==="
   vllm bench serve \
     --backend openai \
@@ -18,7 +21,7 @@ for C in 1 2 4 8 16 32 64 128; do
     --dataset-name random \
     --random-input-len 512 \
     --random-output-len 128 \
-    --num-prompts $((C * 10)) \
+    --num-prompts $N \
     --max-concurrency "$C" \
     --request-rate inf \
     --ignore-eos \
