@@ -12,7 +12,7 @@ mkdir -p "$OUTDIR"
 
 for C in 1 2 4 8 16 32 64 128; do
   N=$(( C * 10 ))
-  (( N < FLOOR )) && N=FLOOR
+  (( N < FLOOR )) && N=$FLOOR
   echo "=== concurrency=$C ==="
   vllm bench serve \
     --backend openai \
