@@ -26,10 +26,10 @@ Dynamic batching variant collects requests for 50ms before firing inference.
 Two separate serving paths were benchmarked, not a single shared pipeline.
 
 **llama.cpp path (queue-based):**
-Request → FastAPI endpoint → asyncio.Queue → Worker → llama_cpp → Response
+Request -> FastAPI endpoint -> asyncio.Queue -> Worker -> llama_cpp -> Response
 
 **vLLM path (native server):**
-Request → vLLM OpenAI-compatible server (PagedAttention, continuous batching) → Response
+Request -> vLLM OpenAI-compatible server (PagedAttention, continuous batching) -> Response
 
 The llama.cpp path uses a hand-rolled FastAPI app that instantiates the model directly
 and processes requests through a single worker pulling off an asyncio.Queue. The vLLM
