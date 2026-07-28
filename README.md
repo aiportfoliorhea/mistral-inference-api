@@ -70,3 +70,28 @@ All benchmarks run on Lambda Labs A10 GPU unless noted.
 - vLLM delivers **1.6x throughput** vs llama.cpp direct
 - vLLM handles 10 concurrent requests in **4s vs 45s** for FastAPI async
 - Dynamic batching only helps when the server is the bottleneck, not the model
+
+## Serving Saturation Sweep (vLLM)
+
+Ran a closed loop concurrency sweep (1 to 128) on vLLM to find the saturation point, 
+using a 512/128 token workload on an A10 GPU.
+
+| Concurrency | Output Throughput (tok/s) | p95 TTFT (ms) |
+|---|---|---|
+| 1 | 29.8 | 123 |
+| 2 | 56.2 | 264 |
+| 4 | 105.7 | 499 |
+| 8 | 183.3 | 920 |
+| 16 | 317.4 | 1,460 |
+| 32 | 478.8 | 1,970 |
+| **64** | **616.0** | **3,810** |
+| 128 | 588.7 | 14,957 |
+
+**Key finding:** throughput peaks at 616 tok/s at concurrency 64, then regresses to 
+588.7 tok/s at 128, while p95 TTFT jumps from 3.8s to nearly 15s. Prometheus metrics 
+confirm the cause. `vllm:kv_cache_usage_perc` climbs from roughly 0.6 to 0.8 at lower 
+concurrency to pinned near 0.85 to 1.0 past the saturation point, and 
+`vllm:num_requests_waiting` goes from flat at 0 to a sustained queue of about 35 to 40 
+requests. The GPU's KV cache runs out of room before compute does, so past 64 
+concurrent requests, work queues up instead of processing in parallel. Throughput 
+flattens and then drops, and latency compounds.
