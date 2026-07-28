@@ -22,7 +22,19 @@ Dynamic batching variant collects requests for 50ms before firing inference.
 - Serving benchmarks run manually on Lambda Labs A10 GPU using curl and Python timing scripts (not saved as notebook)
 
 ## Architecture
-Request → FastAPI endpoint → asyncio.Queue → Worker → llama_cpp / vLLM → Response
+
+Two separate serving paths were benchmarked, not a single shared pipeline.
+
+**llama.cpp path (queue-based):**
+Request → FastAPI endpoint → asyncio.Queue → Worker → llama_cpp → Response
+
+**vLLM path (native server):**
+Request → vLLM OpenAI-compatible server (PagedAttention, continuous batching) → Response
+
+The llama.cpp path uses a hand-rolled FastAPI app that instantiates the model directly
+and processes requests through a single worker pulling off an asyncio.Queue. The vLLM
+path bypasses this entirely, requests hit vLLM's own OpenAI-compatible server, which
+handles batching and scheduling internally.
 
 ## Model Quality Benchmarks (FinanceBench F1)
 
