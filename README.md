@@ -23,18 +23,31 @@ Dynamic batching variant collects requests for 50ms before firing inference.
 
 ## Architecture
 
-Two separate serving paths were benchmarked, not a single shared pipeline.
+Three separate serving paths were benchmarked, not a single shared pipeline.
 
-**llama.cpp path (queue-based):**
-Request -> FastAPI endpoint -> asyncio.Queue -> Worker -> llama_cpp -> Response
+**llama.cpp direct (baseline, no server):**
+Python script loads the model and calls it inline, no FastAPI, no queue, no HTTP layer.
+Concurrent numbers come from launching 10 independent OS processes in parallel (backgrounded
+with `&`, joined with `wait`), each loading its own full model instance. This is real process
+level concurrency, not sequential execution, but each process assumes exclusive GPU access.
+With 10 processes contending for the same GPU, real time came out to 14.572s versus 5.716s
+for one, meaning the processes serialized at the hardware level from GPU contention, not from
+any application level bottleneck.
 
-**vLLM path (native server):**
-Request -> vLLM OpenAI-compatible server (PagedAttention, continuous batching) -> Response
+**FastAPI async (queue-based):**
+Request → FastAPI endpoint → asyncio.Queue → single Worker → llama_cpp → Response
+The worker calls llama_cpp synchronously inside an async function, so this path has exactly
+one model instance processing one request at a time by design. It adds HTTP and queueing
+overhead on top of a single-worker bottleneck, which is why it is slower at concurrency 10
+than llama.cpp direct: one serialized worker versus 10 processes contending for the GPU in
+parallel.
 
-The llama.cpp path uses a hand-rolled FastAPI app that instantiates the model directly
-and processes requests through a single worker pulling off an asyncio.Queue. The vLLM
-path bypasses this entirely, requests hit vLLM's own OpenAI-compatible server, which
-handles batching and scheduling internally.
+**vLLM (native server):**
+Request → vLLM OpenAI-compatible server (PagedAttention, continuous batching) → Response
+Bypasses the FastAPI queue entirely. vLLM manages a single model instance with request
+batching and scheduling handled internally, which is why it is the only path where
+throughput scales with concurrency instead of being bottlenecked by either GPU contention
+or single-worker serialization.
 
 ## Model Quality Benchmarks (FinanceBench F1)
 
